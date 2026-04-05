@@ -70,13 +70,11 @@ export default function CalendarioVoos({ userId, role }: CalendarioVoosProps) {
       .gte('data', start)
       .lte('data', end);
 
-    if (role === 'aluno') {
-      // Aluno vê bloqueios dos instrutores que ele agenda
-      query = query.eq('instrutor_id', userId);
-    } else {
+    if (role === 'professor') {
       // Professor vê seus próprios bloqueios
       query = query.eq('instrutor_id', userId);
     }
+    // Aluno vê TODOS os bloqueios (de todos os instrutores)
 
     const { data } = await query;
     if (data) setBloqueios(data as Bloqueio[]);

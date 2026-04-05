@@ -36,7 +36,7 @@ const alunoNav: NavItem[] = [
   { label: 'Novo Agendamento', href: '/dashboard/novo', icon: <PlusCircle className="w-5 h-5" /> },
   { label: 'Meus Agendamentos', href: '/dashboard/agendamentos', icon: <ClipboardList className="w-5 h-5" /> },
   { label: 'Calendário', href: '/dashboard/calendario', icon: <CalendarDays className="w-5 h-5" /> },
-  { label: 'Notificacoes', href: '/dashboard/notificacoes', icon: <Bell className="w-5 h-5" /> },
+  { label: 'Notificacoes', href: '/dashboard/notificacoes-aluno', icon: <Bell className="w-5 h-5" /> },
 ];
 
 const instrutorNav: NavItem[] = [

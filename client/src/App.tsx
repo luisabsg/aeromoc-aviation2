@@ -65,7 +65,7 @@ function Router() {
           <CalendarioRouter />
         </ProtectedRoute>
       </Route>
-      <Route path="/dashboard/notificacoes">
+      <Route path="/dashboard/notificacoes-aluno">
         <ProtectedRoute requiredRole="aluno">
           <NotificacoesAluno />
         </ProtectedRoute>
