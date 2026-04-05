@@ -14,20 +14,30 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'wouter';
 import {
   Loader2, PlaneTakeoff, Clock, CalendarDays, User, AlertCircle,
-  CheckCircle, XCircle, ArrowRight
+  CheckCircle, XCircle, ArrowRight, Bell, Info
 } from 'lucide-react';
 
 interface AgendamentoComInstrutor extends Agendamento {
   instrutor?: Profile;
 }
 
+interface Notificacao {
+  id: string;
+  titulo: string;
+  mensagem: string;
+  tipo: 'info' | 'aviso' | 'urgente';
+  criado_em: string;
+}
+
 export default function DashboardAluno() {
   const { profile } = useAuth();
   const [agendamentos, setAgendamentos] = useState<AgendamentoComInstrutor[]>([]);
+  const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchAgendamentos();
+    fetchNotificacoes();
   }, [profile]);
 
   const fetchAgendamentos = async () => {
@@ -44,6 +54,16 @@ export default function DashboardAluno() {
       setAgendamentos(data as AgendamentoComInstrutor[]);
     }
     setLoading(false);
+  };
+
+  const fetchNotificacoes = async () => {
+    const { data } = await supabase
+      .from('notificacoes')
+      .select('*')
+      .eq('ativo', true)
+      .order('criado_em', { ascending: false })
+      .limit(3);
+    if (data) setNotificacoes(data as Notificacao[]);
   };
 
   // Separar agendamentos por status
@@ -81,6 +101,32 @@ export default function DashboardAluno() {
           </div>
         ) : (
           <>
+            {/* Notificacoes */}
+            {notificacoes.length > 0 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 shadow-sm">
+                <div className="flex items-start gap-3 mb-3">
+                  <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h3 className="font-bold text-blue-900 mb-2">Notificacoes Importantes</h3>
+                    <div className="space-y-2">
+                      {notificacoes.map(notif => (
+                        <div key={notif.id} className="text-sm text-blue-800">
+                          <p className="font-semibold">{notif.titulo}</p>
+                          <p className="text-blue-700 text-xs mt-0.5">{notif.mensagem}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <Link href="/dashboard/notificacoes-aluno">
+                      <a className="text-blue-600 font-semibold text-sm hover:underline inline-flex items-center gap-1 mt-3">
+                        Ver todas
+                        <ArrowRight className="w-3 h-3" />
+                      </a>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Stats cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {/* Próximas */}

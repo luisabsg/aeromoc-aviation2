@@ -68,7 +68,11 @@ export default function NovoAgendamento() {
 
   const fetchBloqueiosEOcupados = async () => {
     const [{ data: bl }, { data: ag }] = await Promise.all([
-      supabase.from('bloqueios').select('*').eq('instrutor_id', instrutorId).eq('data', data),
+      supabase
+        .from('bloqueios')
+        .select('*')
+        .eq('instrutor_id', instrutorId)
+        .eq('data', data),
       supabase
         .from('agendamentos')
         .select('horario')

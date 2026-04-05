@@ -3,7 +3,8 @@
  * Design: Clean Aviation Dashboard
  * Navy sidebar (#1B2A6B), white content area, Barlow + Inter
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 import { Link, useLocation } from 'wouter';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -55,6 +56,23 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
   const { profile, signOut } = useAuth();
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
+
+  useEffect(() => {
+    if (profile?.role === 'aluno') {
+      fetchNotificationCount();
+      const interval = setInterval(fetchNotificationCount, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [profile]);
+
+  const fetchNotificationCount = async () => {
+    const { data } = await supabase
+      .from('notificacoes')
+      .select('id')
+      .eq('ativo', true);
+    setNotificationCount(data?.length || 0);
+  };
 
   const navItems = profile?.role === 'professor' ? instrutorNav : alunoNav;
   const roleLabel = profile?.role === 'professor' ? 'Instrutor' : 'Aluno';
@@ -93,12 +111,13 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
         <p className="text-blue-400 text-xs font-semibold uppercase tracking-wider px-2 mb-3">Menu</p>
         {navItems.map((item) => {
           const isActive = location === item.href || location.startsWith(item.href + '/');
+          const isNotifications = item.label === 'Notificacoes' && notificationCount > 0;
           return (
             <Link key={item.href} href={item.href}>
               <a
                 onClick={() => setMobileOpen(false)}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
+                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 relative',
                   isActive
                     ? 'bg-white/15 text-white'
                     : 'text-blue-200 hover:bg-white/10 hover:text-white'
@@ -106,6 +125,11 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
               >
                 <span className={isActive ? 'text-white' : 'text-blue-300'}>{item.icon}</span>
                 <span className="flex-1">{item.label}</span>
+                {isNotifications && (
+                  <span className="bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {notificationCount}
+                  </span>
+                )}
                 {isActive && <ChevronRight className="w-3.5 h-3.5 text-white/60" />}
               </a>
             </Link>

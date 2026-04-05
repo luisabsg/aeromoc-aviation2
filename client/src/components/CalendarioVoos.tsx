@@ -66,7 +66,7 @@ export default function CalendarioVoos({ userId, role }: CalendarioVoosProps) {
 
     let query = supabase
       .from('bloqueios')
-      .select('*')
+      .select('*, instrutor:instrutor_id(id, nome, email, role)')
       .gte('data', start)
       .lte('data', end);
 
@@ -77,7 +77,7 @@ export default function CalendarioVoos({ userId, role }: CalendarioVoosProps) {
     // Aluno vê TODOS os bloqueios (de todos os instrutores)
 
     const { data } = await query;
-    if (data) setBloqueios(data as Bloqueio[]);
+    if (data) setBloqueios(data as any);
   };
 
   const days = eachDayOfInterval({
@@ -211,11 +211,17 @@ export default function CalendarioVoos({ userId, role }: CalendarioVoosProps) {
           {selectedDayBloqueios.length > 0 && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-red-700 font-semibold text-sm">Agenda bloqueada neste dia</p>
-              {selectedDayBloqueios.map(b => (
-                <p key={b.id} className="text-red-600 text-xs mt-1">
-                  {b.horario_inicio} às {b.horario_fim}
-                </p>
-              ))}
+              {selectedDayBloqueios.map(b => {
+                const instrutor = (b as any).instrutor;
+                return (
+                  <div key={b.id} className="text-red-600 text-xs mt-2 flex items-center justify-between">
+                    <span>{b.horario_inicio} às {b.horario_fim}</span>
+                    {role === 'aluno' && instrutor && (
+                      <span className="text-red-500 font-semibold text-xs">Prof. {instrutor.nome}</span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
 
