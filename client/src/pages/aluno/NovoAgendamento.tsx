@@ -42,6 +42,14 @@ export default function NovoAgendamento() {
     setHorario('');
   }, [data, instrutorId]);
 
+  // Validar se horário está bloqueado ANTES de enviar
+  const isHorarioBlocked = (slot: string): boolean => {
+    for (const b of bloqueios) {
+      if (isTimeBlocked(slot, b.horario_inicio, b.horario_fim)) return true;
+    }
+    return false;
+  };
+
   useEffect(() => {
     if (data && profile?.id) {
       checkAgendamentoAluno();
@@ -100,6 +108,10 @@ export default function NovoAgendamento() {
     }
     if (agendamentosHoje.length > 0) {
       toast.error('Você já possui um agendamento neste dia.');
+      return;
+    }
+    if (isHorarioBlocked(horario)) {
+      toast.error('Este horário está bloqueado pelo instrutor.');
       return;
     }
     setLoading(true);

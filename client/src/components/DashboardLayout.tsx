@@ -18,6 +18,7 @@ import {
   Ban,
   ChevronRight,
   Home,
+  Bell,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -35,12 +36,14 @@ const alunoNav: NavItem[] = [
   { label: 'Novo Agendamento', href: '/dashboard/novo', icon: <PlusCircle className="w-5 h-5" /> },
   { label: 'Meus Agendamentos', href: '/dashboard/agendamentos', icon: <ClipboardList className="w-5 h-5" /> },
   { label: 'Calendário', href: '/dashboard/calendario', icon: <CalendarDays className="w-5 h-5" /> },
+  { label: 'Notificacoes', href: '/dashboard/notificacoes', icon: <Bell className="w-5 h-5" /> },
 ];
 
 const instrutorNav: NavItem[] = [
   { label: 'Solicitações', href: '/dashboard/solicitacoes', icon: <ClipboardList className="w-5 h-5" /> },
   { label: 'Calendário', href: '/dashboard/calendario', icon: <CalendarDays className="w-5 h-5" /> },
   { label: 'Bloqueios', href: '/dashboard/bloqueios', icon: <Ban className="w-5 h-5" /> },
+  { label: 'Notificações', href: '/dashboard/notificacoes', icon: <Bell className="w-5 h-5" /> },
 ];
 
 interface DashboardLayoutProps {

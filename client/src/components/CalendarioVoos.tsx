@@ -31,7 +31,7 @@ export default function CalendarioVoos({ userId, role }: CalendarioVoosProps) {
 
   useEffect(() => {
     fetchAgendamentos();
-  }, [currentDate, userId]);
+  }, [currentDate, userId, role]);
 
   const fetchAgendamentos = async () => {
     setLoading(true);
@@ -43,7 +43,7 @@ export default function CalendarioVoos({ userId, role }: CalendarioVoosProps) {
       .select('*, aluno:aluno_id(id, nome, email, role), instrutor:instrutor_id(id, nome, email, role)')
       .gte('data', start)
       .lte('data', end)
-      .in('status', ['aguardando', 'aceito']);
+      .in('status', ['pendente', 'confirmado']);
 
     if (role === 'aluno') {
       query = query.eq('aluno_id', userId);

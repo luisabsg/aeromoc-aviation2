@@ -18,15 +18,17 @@ import Login from "./pages/Login";
 
 
 // Aluno pages
-import DashboardAluno from "./pages/aluno/Dashboard";
+import Dashboard from "./pages/aluno/Dashboard";
 import NovoAgendamento from "./pages/aluno/NovoAgendamento";
 import MeusAgendamentos from "./pages/aluno/MeusAgendamentos";
 import CalendarioAluno from "./pages/aluno/Calendario";
+import NotificacoesAluno from "./pages/aluno/Notificacoes";
 
 // Instrutor pages
 import Solicitacoes from "./pages/instrutor/Solicitacoes";
 import CalendarioInstrutor from "./pages/instrutor/Calendario";
 import Bloqueios from "./pages/instrutor/Bloqueios";
+import Notificacoes from "./pages/instrutor/Notificacoes";
 
 function Router() {
   return (
@@ -45,7 +47,7 @@ function Router() {
       {/* Aluno routes */}
       <Route path="/dashboard/aluno">
         <ProtectedRoute requiredRole="aluno">
-          <DashboardAluno />
+          <Dashboard />
         </ProtectedRoute>
       </Route>
       <Route path="/dashboard/novo">
@@ -63,6 +65,11 @@ function Router() {
           <CalendarioRouter />
         </ProtectedRoute>
       </Route>
+      <Route path="/dashboard/notificacoes">
+        <ProtectedRoute requiredRole="aluno">
+          <NotificacoesAluno />
+        </ProtectedRoute>
+      </Route>
 
       {/* Instrutor routes */}
       <Route path="/dashboard/solicitacoes">
@@ -73,6 +80,11 @@ function Router() {
       <Route path="/dashboard/bloqueios">
         <ProtectedRoute requiredRole="professor">
           <Bloqueios />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/dashboard/notificacoes">
+        <ProtectedRoute requiredRole="professor">
+          <Notificacoes />
         </ProtectedRoute>
       </Route>
 
