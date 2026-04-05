@@ -50,6 +50,8 @@ export default function Notificacoes() {
       .from('notificacoes')
       .update({ lida: true })
       .in('id', ids);
+    // Trigger a refresh of notification count in parent component
+    window.dispatchEvent(new Event('notificacoes-updated'));
   };
 
   const tipoConfig = {

@@ -62,7 +62,16 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
     if (profile?.role === 'aluno') {
       fetchNotificationCount();
       const interval = setInterval(fetchNotificationCount, 10000);
-      return () => clearInterval(interval);
+      
+      const handleNotificacoesUpdated = () => {
+        fetchNotificationCount();
+      };
+      window.addEventListener('notificacoes-updated', handleNotificacoesUpdated);
+      
+      return () => {
+        clearInterval(interval);
+        window.removeEventListener('notificacoes-updated', handleNotificacoesUpdated);
+      };
     }
   }, [profile]);
 
@@ -87,8 +96,8 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="px-5 py-6 border-b border-white/10">
-        <img src={LOGO_URL} alt="AeroMoc Aviation" className="h-12 object-contain" />
+      <div className="px-5 py-6 border-b border-white/10 bg-white/5 rounded-lg mx-3">
+        <img src={LOGO_URL} alt="AeroMoc Aviation" className="h-16 object-contain" />
       </div>
 
       {/* User info */}

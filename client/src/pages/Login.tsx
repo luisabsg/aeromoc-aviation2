@@ -91,7 +91,7 @@ export default function Login() {
             <img
               src={LOGO_URL}
               alt="AeroMoc Aviation"
-              className="h-16 object-contain"
+              className="h-24 object-contain"
             />
           </div>
 
