@@ -96,8 +96,12 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="px-5 py-6 border-b border-white/10 bg-white/5 rounded-lg mx-3">
-        <img src={LOGO_URL} alt="AeroMoc Aviation" className="h-16 object-contain" />
+      <div className="px-5 py-6 border-b border-white/10">
+        <div className="flex justify-center">
+          <div className="bg-white rounded-2xl p-4 shadow-lg">
+            <img src={LOGO_URL} alt="AeroMoc Aviation" className="h-20 object-contain" />
+          </div>
+        </div>
       </div>
 
       {/* User info */}
