@@ -17,6 +17,7 @@ import {
   X,
   Ban,
   ChevronRight,
+  Home,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -30,6 +31,7 @@ interface NavItem {
 }
 
 const alunoNav: NavItem[] = [
+  { label: 'Dashboard', href: '/dashboard/aluno', icon: <Home className="w-5 h-5" /> },
   { label: 'Novo Agendamento', href: '/dashboard/novo', icon: <PlusCircle className="w-5 h-5" /> },
   { label: 'Meus Agendamentos', href: '/dashboard/agendamentos', icon: <ClipboardList className="w-5 h-5" /> },
   { label: 'Calendário', href: '/dashboard/calendario', icon: <CalendarDays className="w-5 h-5" /> },
@@ -38,7 +40,7 @@ const alunoNav: NavItem[] = [
 const instrutorNav: NavItem[] = [
   { label: 'Solicitações', href: '/dashboard/solicitacoes', icon: <ClipboardList className="w-5 h-5" /> },
   { label: 'Calendário', href: '/dashboard/calendario', icon: <CalendarDays className="w-5 h-5" /> },
-  { label: 'Bloqueios da Agenda', href: '/dashboard/bloqueios', icon: <Ban className="w-5 h-5" /> },
+  { label: 'Bloqueios', href: '/dashboard/bloqueios', icon: <Ban className="w-5 h-5" /> },
 ];
 
 interface DashboardLayoutProps {
@@ -53,6 +55,7 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
 
   const navItems = profile?.role === 'professor' ? instrutorNav : alunoNav;
   const roleLabel = profile?.role === 'professor' ? 'Instrutor' : 'Aluno';
+  const isAlunoHome = profile?.role === 'aluno' && location === '/dashboard/aluno';
 
   const handleLogout = async () => {
     await signOut();
@@ -165,7 +168,7 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
             >
               <Menu className="w-5 h-5" />
             </Button>
-            {title && (
+            {title && !isAlunoHome && (
               <div className="flex items-center gap-2">
                 <Plane className="w-4 h-4 text-[#1B2A6B]" />
                 <h1 className="text-lg font-bold text-[#1B2A6B]">{title}</h1>

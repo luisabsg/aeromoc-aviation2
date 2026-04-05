@@ -15,9 +15,10 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 // Pages
 import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
+
 
 // Aluno pages
+import DashboardAluno from "./pages/aluno/Dashboard";
 import NovoAgendamento from "./pages/aluno/NovoAgendamento";
 import MeusAgendamentos from "./pages/aluno/MeusAgendamentos";
 import CalendarioAluno from "./pages/aluno/Calendario";
@@ -37,11 +38,16 @@ function Router() {
       {/* Dashboard redirect */}
       <Route path="/dashboard">
         <ProtectedRoute>
-          <Dashboard />
+          <DashboardRedirect />
         </ProtectedRoute>
       </Route>
 
       {/* Aluno routes */}
+      <Route path="/dashboard/aluno">
+        <ProtectedRoute requiredRole="aluno">
+          <DashboardAluno />
+        </ProtectedRoute>
+      </Route>
       <Route path="/dashboard/novo">
         <ProtectedRoute requiredRole="aluno">
           <NovoAgendamento />
@@ -83,6 +89,16 @@ function CalendarioRouter() {
   if (loading || !profile) return null;
   if (profile.role === 'professor') return <CalendarioInstrutor />;
   return <CalendarioAluno />;
+}
+
+// Dashboard redirect — routes to correct first page
+function DashboardRedirect() {
+  const { profile } = useAuth();
+  if (!profile) return null;
+  if (profile.role === 'professor') {
+    return <Redirect to="/dashboard/solicitacoes" />;
+  }
+  return <Redirect to="/dashboard/aluno" />;
 }
 
 function App() {

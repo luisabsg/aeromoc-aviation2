@@ -1,14 +1,13 @@
 /**
- * AeroMoc Aviation — Login Page
- * Design: Clean Aviation Dashboard
- * Navy sidebar (#1B2A6B), white background, Barlow + Inter typography
- * Red (#E8192C) for brand accents only
+ * AeroMoc Aviation — Premium Login Page
+ * Design: Clean Aviation Dashboard with premium aesthetics
+ * Navy #1B2A6B, Red #E8192C, Barlow + Inter typography
  */
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from 'wouter';
 import { toast } from 'sonner';
-import { Plane, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Plane, Eye, EyeOff, Loader2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -40,64 +39,97 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left panel — brand */}
+    <div className="min-h-screen flex flex-col lg:flex-row bg-gradient-to-br from-[#F4F6FA] via-white to-[#F0F3F8]">
+      {/* Left panel — brand hero */}
       <div
-        className="hidden lg:flex flex-col justify-between w-[420px] shrink-0 p-10"
-        style={{ background: 'linear-gradient(160deg, #1B2A6B 0%, #0D1B3E 100%)' }}
+        className="hidden lg:flex flex-col justify-between w-1/2 p-12 relative overflow-hidden"
+        style={{ background: 'linear-gradient(135deg, #1B2A6B 0%, #0D1B3E 100%)' }}
       >
-        <div className="flex items-center gap-3">
-          <Plane className="text-white w-6 h-6" />
-          <span className="text-white font-semibold tracking-widest text-sm uppercase">AeroMoc Aviation</span>
+        {/* Decorative circles */}
+        <div className="absolute top-10 right-10 w-40 h-40 rounded-full opacity-10 border-2 border-white" />
+        <div className="absolute bottom-20 left-10 w-32 h-32 rounded-full opacity-10 border-2 border-white" />
+
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-12">
+            <Plane className="text-white w-7 h-7" />
+            <span className="text-white font-bold tracking-widest text-sm uppercase">AeroMoc Aviation</span>
+          </div>
+
+          <div>
+            <div className="w-16 h-1 mb-8" style={{ background: '#E8192C' }} />
+            <h1 className="text-white text-5xl font-bold leading-tight mb-6">
+              Agendamento de<br />Aulas de Voo
+            </h1>
+            <p className="text-blue-200 text-lg leading-relaxed max-w-md">
+              Plataforma oficial para alunos e instrutores gerenciarem horários, visualizarem calendários e controlarem disponibilidade de voos com segurança e eficiência.
+            </p>
+          </div>
         </div>
 
-        <div>
-          <div className="w-12 h-1 mb-6" style={{ background: '#E8192C' }} />
-          <h2 className="text-white text-3xl font-bold leading-snug mb-4">
-            Agendamento de<br />Aulas de Voo
-          </h2>
-          <p className="text-blue-200 text-sm leading-relaxed">
-            Plataforma oficial para alunos e instrutores gerenciarem horários, visualizarem calendários e controlarem disponibilidade de voos.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 text-blue-300 text-xs">
-          <span>© 2025 AeroMoc Aviation</span>
+        <div className="relative z-10 space-y-4">
+          <div className="flex items-center gap-3 text-blue-300 text-sm">
+            <div className="w-2 h-2 rounded-full bg-[#E8192C]" />
+            <span>Autenticação segura via Supabase</span>
+          </div>
+          <div className="flex items-center gap-3 text-blue-300 text-sm">
+            <div className="w-2 h-2 rounded-full bg-[#E8192C]" />
+            <span>Calendário inteligente com bloqueios</span>
+          </div>
+          <div className="flex items-center gap-3 text-blue-300 text-sm">
+            <div className="w-2 h-2 rounded-full bg-[#E8192C]" />
+            <span>Gerenciamento de solicitações em tempo real</span>
+          </div>
+          <p className="text-blue-400 text-xs pt-4">© 2025 AeroMoc Aviation. Todos os direitos reservados.</p>
         </div>
       </div>
 
-      {/* Right panel — form */}
-      <div className="flex-1 flex flex-col items-center justify-center bg-[#F4F6FA] p-6">
+      {/* Right panel — login form */}
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 lg:py-0 lg:w-1/2">
         <div className="w-full max-w-sm">
-          {/* Logo */}
-          <div className="flex justify-center mb-8">
+          {/* Logo mobile */}
+          <div className="flex justify-center mb-8 lg:hidden">
             <img
               src={LOGO_URL}
               alt="AeroMoc Aviation"
-              className="h-20 object-contain"
+              className="h-16 object-contain"
             />
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-            <h1 className="text-2xl font-bold text-[#1B2A6B] mb-1">Entrar</h1>
-            <p className="text-gray-500 text-sm mb-6">Acesse sua conta para continuar</p>
+          {/* Form card */}
+          <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 p-8 lg:p-10">
+            {/* Header */}
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold text-[#1B2A6B] mb-2">Bem-vindo</h2>
+              <p className="text-gray-500 text-sm leading-relaxed">
+                Acesse sua conta para gerenciar suas aulas de voo
+              </p>
+            </div>
 
+            {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-gray-700 font-medium text-sm">E-mail</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="seu@email.com"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  className="h-11 border-gray-200 focus:border-[#1B2A6B] focus:ring-[#1B2A6B]/20"
-                  autoComplete="email"
-                />
+              {/* Email */}
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-gray-700 font-semibold text-sm">
+                  E-mail
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    className="h-12 border-gray-200 focus:border-[#1B2A6B] focus:ring-2 focus:ring-[#1B2A6B]/20 bg-gray-50 hover:bg-white transition-colors pl-4"
+                    autoComplete="email"
+                  />
+                </div>
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-gray-700 font-medium text-sm">Senha</Label>
+              {/* Password */}
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-gray-700 font-semibold text-sm">
+                  Senha
+                </Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -105,35 +137,59 @@ export default function Login() {
                     placeholder="••••••••"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    className="h-11 border-gray-200 focus:border-[#1B2A6B] focus:ring-[#1B2A6B]/20 pr-10"
+                    className="h-12 border-gray-200 focus:border-[#1B2A6B] focus:ring-2 focus:ring-[#1B2A6B]/20 bg-gray-50 hover:bg-white transition-colors pl-4 pr-10"
                     autoComplete="current-password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
 
+              {/* Submit button */}
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full h-11 font-semibold text-white"
-                style={{ background: '#1B2A6B' }}
+                className="w-full h-12 font-semibold text-white text-base mt-8 group"
+                style={{ background: 'linear-gradient(135deg, #1B2A6B 0%, #0D1B3E 100%)' }}
               >
                 {loading ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Entrando...</>
-                ) : 'Entrar'}
+                  <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Entrando...</>
+                ) : (
+                  <>
+                    Entrar
+                    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
               </Button>
             </form>
+
+            {/* Divider */}
+            <div className="flex items-center gap-3 my-6">
+              <div className="h-px flex-1 bg-gray-200" />
+              <span className="text-gray-400 text-xs uppercase tracking-wider">ou</span>
+              <div className="h-px flex-1 bg-gray-200" />
+            </div>
+
+            {/* Help text */}
+            <p className="text-center text-gray-500 text-sm leading-relaxed">
+              Problemas para acessar?{' '}
+              <span className="text-[#1B2A6B] font-semibold cursor-pointer hover:underline">
+                Entre em contato com o administrador
+              </span>
+            </p>
           </div>
 
-          <p className="text-center text-xs text-gray-400 mt-6">
-            Problemas para acessar? Entre em contato com o administrador.
-          </p>
+          {/* Footer mobile */}
+          <div className="text-center mt-6 lg:hidden">
+            <p className="text-gray-400 text-xs">
+              © 2025 AeroMoc Aviation
+            </p>
+          </div>
         </div>
       </div>
     </div>
