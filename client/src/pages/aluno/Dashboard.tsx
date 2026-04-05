@@ -117,11 +117,9 @@ export default function DashboardAluno() {
                         </div>
                       ))}
                     </div>
-                    <Link href="/dashboard/notificacoes-aluno">
-                      <a className="text-blue-600 font-semibold text-sm hover:underline inline-flex items-center gap-1 mt-3">
-                        Ver todas
-                        <ArrowRight className="w-3 h-3" />
-                      </a>
+                    <Link href="/dashboard/notificacoes-aluno" className="text-blue-600 font-semibold text-sm hover:underline inline-flex items-center gap-1 mt-3">
+                      Ver todas
+                      <ArrowRight className="w-3 h-3" />
                     </Link>
                   </div>
                 </div>
