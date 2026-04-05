@@ -48,9 +48,11 @@ export default function CalendarioVoos({ userId, role }: CalendarioVoosProps) {
       .in('status', ['pendente', 'confirmado']);
 
     if (role === 'aluno') {
-      query = query.eq('aluno_id', userId);
+      // Alunos veem: suas solicitacoes (pendente) + TODOS os confirmados (reservas)
+      query = query.or(`and(aluno_id.eq.${userId},status.eq.pendente),status.eq.confirmado`);
     } else {
-      query = query.eq('instrutor_id', userId);
+      // Professores veem: seus agendamentos (pendente e confirmado)
+      query = query.eq('instrutor_id', userId).in('status', ['pendente', 'confirmado']);
     }
 
     const { data, error } = await query.order('horario');
@@ -241,16 +243,22 @@ export default function CalendarioVoos({ userId, role }: CalendarioVoosProps) {
                     <span>
                       {role === 'aluno'
                         ? (ag.instrutor as any)?.nome ?? 'Instrutor'
-                        : (ag.aluno as any)?.nome ?? 'Aluno'}
+                        : ag.status === 'confirmado'
+                        ? (ag.aluno as any)?.nome ?? 'Aluno'
+                        : 'Aluno'}
                     </span>
                   </div>
                   <span
                     className={cn(
                       'ml-auto text-xs font-semibold px-2 py-0.5 rounded-full border',
-                      statusColor(ag.status as StatusType)
+                      role === 'aluno' && ag.status === 'confirmado' && ag.aluno_id !== userId
+                        ? 'bg-gray-100 text-gray-700 border-gray-300'
+                        : statusColor(ag.status as StatusType)
                     )}
                   >
-                    {statusLabel(ag.status as StatusType)}
+                    {role === 'aluno' && ag.status === 'confirmado' && ag.aluno_id !== userId
+                      ? 'Reservado'
+                      : statusLabel(ag.status as StatusType)}
                   </span>
                 </div>
               ))}

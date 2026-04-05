@@ -118,6 +118,10 @@ export default function NovoAgendamento() {
       toast.error('Este horário está bloqueado pelo instrutor.');
       return;
     }
+    if (horariosOcupados.includes(horario)) {
+      toast.error('Este horário já está reservado.');
+      return;
+    }
     setLoading(true);
     const { error } = await supabase.from('agendamentos').insert({
       aluno_id: profile!.id,
