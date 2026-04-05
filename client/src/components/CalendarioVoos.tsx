@@ -151,7 +151,7 @@ export default function CalendarioVoos({ userId, role }: CalendarioVoosProps) {
                         key={ag.id}
                         className={cn(
                           'text-xs px-1 rounded truncate font-medium',
-                          ag.status === 'aceito' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'
+                          ag.status === 'confirmado' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'
                         )}
                       >
                         {ag.horario}

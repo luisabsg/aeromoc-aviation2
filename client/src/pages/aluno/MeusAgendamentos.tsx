@@ -102,7 +102,7 @@ export default function MeusAgendamentos() {
                 key={ag.id}
                 className={`bg-white rounded-xl border shadow-sm overflow-hidden transition-all hover:shadow-md ${
                   ag.status === 'recusado' ? 'border-red-100' :
-                  ag.status === 'aceito' ? 'border-green-100' :
+                  ag.status === 'confirmado' ? 'border-green-100' :
                   'border-gray-100'
                 }`}
               >
@@ -111,7 +111,7 @@ export default function MeusAgendamentos() {
                   <div
                     className={`w-1 shrink-0 ${
                       ag.status === 'recusado' ? 'bg-red-400' :
-                      ag.status === 'aceito' ? 'bg-green-500' :
+                      ag.status === 'confirmado' ? 'bg-green-500' :
                       'bg-amber-400'
                     }`}
                   />
@@ -143,7 +143,7 @@ export default function MeusAgendamentos() {
 
                       <div className="flex items-center gap-2 flex-wrap">
                         <StatusBadge status={ag.status} />
-                        {ag.status === 'aguardando' && (
+                        {ag.status === 'pendente' && (
                           <Button
                             variant="outline"
                             size="sm"

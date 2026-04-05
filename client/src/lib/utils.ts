@@ -15,12 +15,12 @@ export function generateTimeSlots(): string[] {
   return slots;
 }
 
-export type StatusType = 'aguardando' | 'aceito' | 'recusado';
+export type StatusType = 'pendente' | 'confirmado' | 'recusado';
 
 export function statusLabel(status: StatusType): string {
   const map: Record<StatusType, string> = {
-    aguardando: 'Aguardando',
-    aceito: 'Aceito',
+    pendente: 'Pendente',
+    confirmado: 'Confirmado',
     recusado: 'Recusado',
   };
   return map[status] ?? status;
@@ -28,8 +28,8 @@ export function statusLabel(status: StatusType): string {
 
 export function statusColor(status: StatusType): string {
   const map: Record<StatusType, string> = {
-    aguardando: 'bg-amber-100 text-amber-800 border-amber-300',
-    aceito: 'bg-green-100 text-green-800 border-green-300',
+    pendente: 'bg-amber-100 text-amber-800 border-amber-300',
+    confirmado: 'bg-green-100 text-green-800 border-green-300',
     recusado: 'bg-red-100 text-red-800 border-red-300',
   };
   return map[status] ?? 'bg-gray-100 text-gray-700';
@@ -37,8 +37,8 @@ export function statusColor(status: StatusType): string {
 
 export function statusDot(status: StatusType): string {
   const map: Record<StatusType, string> = {
-    aguardando: 'bg-amber-400',
-    aceito: 'bg-green-500',
+    pendente: 'bg-amber-400',
+    confirmado: 'bg-green-500',
     recusado: 'bg-red-500',
   };
   return map[status] ?? 'bg-gray-400';

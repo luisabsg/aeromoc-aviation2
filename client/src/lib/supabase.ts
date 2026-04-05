@@ -20,7 +20,7 @@ export interface Agendamento {
   instrutor_id: string;
   data: string;
   horario: string;
-  status: 'aguardando' | 'aceito' | 'recusado';
+  status: 'pendente' | 'confirmado' | 'recusado';
   observacao?: string;
   created_at?: string;
   // joined

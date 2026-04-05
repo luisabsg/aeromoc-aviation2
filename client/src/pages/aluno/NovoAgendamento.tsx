@@ -66,7 +66,7 @@ export default function NovoAgendamento() {
         .select('horario')
         .eq('instrutor_id', instrutorId)
         .eq('data', data)
-        .in('status', ['aguardando', 'aceito']),
+        .in('status', ['pendente', 'confirmado']),
     ]);
     setBloqueios((bl as Bloqueio[]) ?? []);
     setHorariosOcupados((ag ?? []).map((a: { horario: string }) => a.horario));
@@ -78,7 +78,7 @@ export default function NovoAgendamento() {
       .select('id')
       .eq('aluno_id', profile!.id)
       .eq('data', data)
-      .in('status', ['aguardando', 'aceito']);
+      .in('status', ['pendente', 'confirmado']);
     setAgendamentosHoje((ag ?? []).map((a: { id: string }) => a.id));
   };
 
@@ -108,11 +108,12 @@ export default function NovoAgendamento() {
       instrutor_id: instrutorId,
       data,
       horario,
-      status: 'aguardando',
+      status: 'pendente',
     });
     setLoading(false);
     if (error) {
-      toast.error('Erro ao criar agendamento. Tente novamente.');
+      console.error('Erro ao criar agendamento:', error);
+      toast.error(`Erro: ${error.message || 'Tente novamente'}`);
     } else {
       toast.success('Aula solicitada com sucesso! Aguarde a confirmação do instrutor.');
       setData('');

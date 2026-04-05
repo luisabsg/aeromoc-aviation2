@@ -47,8 +47,8 @@ export default function DashboardAluno() {
   };
 
   // Separar agendamentos por status
-  const proximas = agendamentos.filter(a => a.status === 'aceito');
-  const aguardando = agendamentos.filter(a => a.status === 'aguardando');
+  const proximas = agendamentos.filter(a => a.status === 'confirmado');
+  const aguardando = agendamentos.filter(a => a.status === 'pendente');
   const recusadas = agendamentos.filter(a => a.status === 'recusado');
 
   // Próxima aula

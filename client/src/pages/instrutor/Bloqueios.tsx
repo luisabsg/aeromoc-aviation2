@@ -75,7 +75,8 @@ export default function Bloqueios() {
     });
     setSaving(false);
     if (error) {
-      toast.error('Erro ao salvar bloqueio.');
+      console.error('Erro ao salvar bloqueio:', error);
+      toast.error(`Erro: ${error.message || 'Tente novamente'}`);
     } else {
       toast.success('Bloqueio cadastrado com sucesso!');
       setData('');

@@ -60,7 +60,7 @@ export default function Solicitacoes() {
     setActionLoading(true);
     const { error } = await supabase
       .from('agendamentos')
-      .update({ status: 'aceito' })
+      .update({ status: 'confirmado' })
       .eq('id', id);
     setActionLoading(false);
     if (error) {
@@ -105,8 +105,8 @@ export default function Solicitacoes() {
   });
 
   const counts = {
-    aguardando: agendamentos.filter(a => a.status === 'aguardando').length,
-    aceito: agendamentos.filter(a => a.status === 'aceito').length,
+    pendente: agendamentos.filter(a => a.status === 'pendente').length,
+    confirmado: agendamentos.filter(a => a.status === 'confirmado').length,
     recusado: agendamentos.filter(a => a.status === 'recusado').length,
   };
 
@@ -116,8 +116,8 @@ export default function Solicitacoes() {
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-3 mb-6">
           {[
-            { label: 'Aguardando', count: counts.aguardando, color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200' },
-            { label: 'Aceitos', count: counts.aceito, color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
+            { label: 'Pendentes', count: counts.pendente, color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200' },
+            { label: 'Confirmados', count: counts.confirmado, color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
             { label: 'Recusados', count: counts.recusado, color: 'text-red-600', bg: 'bg-red-50 border-red-200' },
           ].map(s => (
             <div key={s.label} className={`rounded-xl border p-4 ${s.bg}`}>
@@ -136,8 +136,8 @@ export default function Solicitacoes() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="todos">Todos</SelectItem>
-              <SelectItem value="aguardando">Aguardando</SelectItem>
-              <SelectItem value="aceito">Aceitos</SelectItem>
+              <SelectItem value="pendente">Pendentes</SelectItem>
+              <SelectItem value="confirmado">Confirmados</SelectItem>
               <SelectItem value="recusado">Recusados</SelectItem>
             </SelectContent>
           </Select>
@@ -170,7 +170,7 @@ export default function Solicitacoes() {
                 key={ag.id}
                 className={`bg-white rounded-xl border shadow-sm overflow-hidden transition-all hover:shadow-md ${
                   ag.status === 'recusado' ? 'border-red-100' :
-                  ag.status === 'aceito' ? 'border-green-100' :
+                  ag.status === 'confirmado' ? 'border-green-100' :
                   'border-gray-100'
                 }`}
               >
@@ -178,7 +178,7 @@ export default function Solicitacoes() {
                   <div
                     className={`w-1 shrink-0 ${
                       ag.status === 'recusado' ? 'bg-red-400' :
-                      ag.status === 'aceito' ? 'bg-green-500' :
+                      ag.status === 'confirmado' ? 'bg-green-500' :
                       'bg-amber-400'
                     }`}
                   />
@@ -210,7 +210,7 @@ export default function Solicitacoes() {
 
                       <div className="flex items-center gap-2 flex-wrap">
                         <StatusBadge status={ag.status} />
-                        {ag.status === 'aguardando' && (
+                        {ag.status === 'pendente' && (
                           <>
                             <Button
                               size="sm"
