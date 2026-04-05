@@ -61,6 +61,7 @@ export default function DashboardAluno() {
       .from('notificacoes')
       .select('*')
       .eq('ativo', true)
+      .eq('lida', false)
       .order('criado_em', { ascending: false })
       .limit(3);
     if (data) setNotificacoes(data as Notificacao[]);

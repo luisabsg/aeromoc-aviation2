@@ -15,6 +15,7 @@ interface Notificacao {
   mensagem: string;
   tipo: 'info' | 'aviso' | 'urgente';
   ativo: boolean;
+  lida: boolean;
   criado_em: string;
 }
 
@@ -36,8 +37,19 @@ export default function Notificacoes() {
       .eq('ativo', true)
       .order('criado_em', { ascending: false });
 
-    if (!error && data) setNotificacoes(data as Notificacao[]);
+    if (!error && data) {
+      setNotificacoes(data as Notificacao[]);
+      // Marcar todas como lidas quando abre a página
+      await markAllAsRead(data.map(n => n.id));
+    }
     setLoading(false);
+  };
+
+  const markAllAsRead = async (ids: string[]) => {
+    await supabase
+      .from('notificacoes')
+      .update({ lida: true })
+      .in('id', ids);
   };
 
   const tipoConfig = {
@@ -80,7 +92,7 @@ export default function Notificacoes() {
               return (
                 <div
                   key={notif.id}
-                  className={`rounded-xl border p-5 transition-all hover:shadow-md ${config.bg}`}
+                  className={`rounded-xl border p-5 transition-all hover:shadow-md ${config.bg} ${notif.lida ? 'opacity-75' : 'opacity-100'}`}
                 >
                   <div className="flex items-start gap-4">
                     <div className="mt-0.5 shrink-0">{config.icon}</div>

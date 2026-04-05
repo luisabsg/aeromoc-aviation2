@@ -70,7 +70,8 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
     const { data } = await supabase
       .from('notificacoes')
       .select('id')
-      .eq('ativo', true);
+      .eq('ativo', true)
+      .eq('lida', false);
     setNotificationCount(data?.length || 0);
   };
 
