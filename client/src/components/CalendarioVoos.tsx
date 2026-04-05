@@ -6,7 +6,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { formatDate, statusColor, statusDot, statusLabel, type StatusType } from '@/lib/utils';
-import type { Agendamento, Profile } from '@/lib/supabase';
+import type { Agendamento, Profile, Bloqueio } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, Clock, User, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -26,11 +26,13 @@ interface AgendamentoComNomes extends Agendamento {
 export default function CalendarioVoos({ userId, role }: CalendarioVoosProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [agendamentos, setAgendamentos] = useState<AgendamentoComNomes[]>([]);
+  const [bloqueios, setBloqueios] = useState<Bloqueio[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
   useEffect(() => {
     fetchAgendamentos();
+    fetchBloqueios();
   }, [currentDate, userId, role]);
 
   const fetchAgendamentos = async () => {
@@ -58,6 +60,28 @@ export default function CalendarioVoos({ userId, role }: CalendarioVoosProps) {
     setLoading(false);
   };
 
+  const fetchBloqueios = async () => {
+    const start = format(startOfMonth(currentDate), 'yyyy-MM-dd');
+    const end = format(endOfMonth(currentDate), 'yyyy-MM-dd');
+
+    let query = supabase
+      .from('bloqueios')
+      .select('*')
+      .gte('data', start)
+      .lte('data', end);
+
+    if (role === 'aluno') {
+      // Aluno vê bloqueios dos instrutores que ele agenda
+      query = query.eq('instrutor_id', userId);
+    } else {
+      // Professor vê seus próprios bloqueios
+      query = query.eq('instrutor_id', userId);
+    }
+
+    const { data } = await query;
+    if (data) setBloqueios(data as Bloqueio[]);
+  };
+
   const days = eachDayOfInterval({
     start: startOfMonth(currentDate),
     end: endOfMonth(currentDate),
@@ -69,7 +93,11 @@ export default function CalendarioVoos({ userId, role }: CalendarioVoosProps) {
   const getAgendamentosForDay = (day: Date) =>
     agendamentos.filter(ag => isSameDay(parseISO(ag.data), day));
 
+  const getBloqueiosForDay = (day: Date) =>
+    bloqueios.filter(b => isSameDay(parseISO(b.data), day));
+
   const selectedDayAgendamentos = selectedDay ? getAgendamentosForDay(selectedDay) : [];
+  const selectedDayBloqueios = selectedDay ? getBloqueiosForDay(selectedDay) : [];
 
   return (
     <div className="space-y-4">
@@ -123,6 +151,7 @@ export default function CalendarioVoos({ userId, role }: CalendarioVoosProps) {
 
             {days.map(day => {
               const dayAgs = getAgendamentosForDay(day);
+              const dayBloqueios = getBloqueiosForDay(day);
               const isSelected = selectedDay && isSameDay(day, selectedDay);
               const isCurrentMonth = isSameMonth(day, currentDate);
               const isCurrentDay = isToday(day);
@@ -134,7 +163,8 @@ export default function CalendarioVoos({ userId, role }: CalendarioVoosProps) {
                   className={cn(
                     'h-16 border-b border-r border-gray-50 p-1.5 text-left transition-colors hover:bg-blue-50/50',
                     isSelected && 'bg-blue-50 ring-2 ring-inset ring-[#1B2A6B]/20',
-                    !isCurrentMonth && 'opacity-40'
+                    !isCurrentMonth && 'opacity-40',
+                    dayBloqueios.length > 0 && 'bg-red-50/30'
                   )}
                 >
                   <span
@@ -160,6 +190,11 @@ export default function CalendarioVoos({ userId, role }: CalendarioVoosProps) {
                     {dayAgs.length > 2 && (
                       <div className="text-xs text-gray-400 px-1">+{dayAgs.length - 2}</div>
                     )}
+                    {dayBloqueios.length > 0 && (
+                      <div className="text-xs px-1 py-0.5 rounded bg-red-100 text-red-700 font-semibold">
+                        Bloqueado
+                      </div>
+                    )}
                   </div>
                 </button>
               );
@@ -174,6 +209,18 @@ export default function CalendarioVoos({ userId, role }: CalendarioVoosProps) {
           <h4 className="font-bold text-[#1B2A6B] mb-3 capitalize">
             {format(selectedDay, "EEEE, d 'de' MMMM", { locale: ptBR })}
           </h4>
+          
+          {selectedDayBloqueios.length > 0 && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-700 font-semibold text-sm">Agenda bloqueada neste dia</p>
+              {selectedDayBloqueios.map(b => (
+                <p key={b.id} className="text-red-600 text-xs mt-1">
+                  {b.horario_inicio} às {b.horario_fim}
+                </p>
+              ))}
+            </div>
+          )}
+
           {selectedDayAgendamentos.length === 0 ? (
             <p className="text-gray-400 text-sm italic">Nenhuma aula neste dia.</p>
           ) : (
