@@ -21,9 +21,11 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  
-const handleSubmit = async (e: React.FormEvent) => {
+
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
+
+  if (loading) return;
 
   if (!email || !password) {
     toast.error('Preencha e-mail e senha.');
@@ -33,7 +35,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   try {
     setLoading(true);
 
-    const { error } = await signIn(email, password);
+    const { error } = await signIn(email.trim(), password);
 
     if (error) {
       toast.error(error);
