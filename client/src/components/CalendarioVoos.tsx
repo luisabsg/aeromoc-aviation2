@@ -242,7 +242,7 @@ export default function CalendarioVoos({ userId, role }: CalendarioVoosProps) {
                             : 'bg-amber-100 text-amber-800'
                         )}
                       >
-                        {isReservaDeOutroAluno(ag) ? 'Reservado' : ag.horario}
+                       {ag.horario}
                       </div>
                     ))}
 
@@ -306,9 +306,9 @@ export default function CalendarioVoos({ userId, role }: CalendarioVoosProps) {
 
                     <div className="flex items-center gap-2 text-sm">
                       <Clock className="w-3.5 h-3.5 text-gray-400" />
-                      <span className="font-semibold text-gray-800">
-                        {reservaDeOutroAluno ? 'Reservado' : ag.horario}
-                      </span>
+                     <span className="font-semibold text-gray-800">
+  {ag.horario}
+</span>
                     </div>
 
                     <div className="flex items-center gap-2 text-sm text-gray-600">
