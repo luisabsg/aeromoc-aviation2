@@ -196,9 +196,10 @@ export default function DashboardLayout({
     profile?.role === 'aluno' && location === '/dashboard/aluno';
 
   const handleLogout = async () => {
-    await signOut();
-    toast.success('Sessão encerrada com sucesso.');
-  };
+  await signOut();
+  toast.success('Sessão encerrada com sucesso.');
+  window.location.href = '/login';
+};
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">

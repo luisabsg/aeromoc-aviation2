@@ -1,9 +1,4 @@
-/**
- * AeroMoc Aviation — Premium Login Page
- * Design: Clean Aviation Dashboard with premium aesthetics
- * Navy #1B2A6B, Red #E8192C, Barlow + Inter typography
- */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from 'wouter';
 import { toast } from 'sonner';
@@ -16,12 +11,8 @@ const LOGO_URL =
   'https://d2xsxph8kpxj0f.cloudfront.net/310519663517498116/VRSe3ygr3YDCgGhtaryZLm/aeromoc-logo_05fd6baf.png';
 
 export default function Login() {
-  const { signIn } = useAuth();
+  const { signIn, user, profile, loading: authLoading } = useAuth();
   const [, navigate] = useLocation();
-
-  const formRef = useRef<HTMLFormElement | null>(null);
-  const emailRef = useRef<HTMLInputElement | null>(null);
-  const passwordRef = useRef<HTMLInputElement | null>(null);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,26 +20,18 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const syncAutofill = () => {
-      const emailValue = emailRef.current?.value ?? '';
-      const passwordValue = passwordRef.current?.value ?? '';
-
-      if (emailValue !== email) setEmail(emailValue);
-      if (passwordValue !== password) setPassword(passwordValue);
-    };
-
-    const id = window.setTimeout(syncAutofill, 150);
-    return () => window.clearTimeout(id);
-  }, []);
+    if (!authLoading && user && profile) {
+      navigate('/dashboard');
+    }
+  }, [authLoading, user, profile, navigate]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (loading) return;
 
-    const formData = new FormData(e.currentTarget);
-    const submittedEmail = String(formData.get('email') ?? '').trim();
-    const submittedPassword = String(formData.get('password') ?? '');
+    const submittedEmail = email.trim();
+    const submittedPassword = password;
 
     if (!submittedEmail || !submittedPassword) {
       toast.error('Preencha e-mail e senha.');
@@ -65,10 +48,8 @@ export default function Login() {
         return;
       }
 
-      setEmail(submittedEmail);
-      setPassword(submittedPassword);
-
-      navigate('/dashboard');
+      // não navega aqui à força
+      // a navegação acontece no useEffect quando auth/user/profile estiverem prontos
     } catch (err) {
       console.error('Erro inesperado no login:', err);
       toast.error('Erro inesperado ao entrar.');
@@ -141,21 +122,19 @@ export default function Login() {
               </p>
             </div>
 
-            <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-gray-700 font-semibold text-sm">
                   E-mail
                 </Label>
                 <div className="relative">
                   <Input
-                    ref={emailRef}
                     id="email"
                     name="email"
                     type="email"
                     placeholder="seu@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    onInput={(e) => setEmail((e.target as HTMLInputElement).value)}
                     className="h-12 border-gray-200 focus:border-[#1B2A6B] focus:ring-2 focus:ring-[#1B2A6B]/20 bg-gray-50 hover:bg-white transition-colors pl-4"
                     autoComplete="username"
                   />
@@ -168,14 +147,12 @@ export default function Login() {
                 </Label>
                 <div className="relative">
                   <Input
-                    ref={passwordRef}
                     id="password"
                     name="password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    onInput={(e) => setPassword((e.target as HTMLInputElement).value)}
                     className="h-12 border-gray-200 focus:border-[#1B2A6B] focus:ring-2 focus:ring-[#1B2A6B]/20 bg-gray-50 hover:bg-white transition-colors pl-4 pr-10"
                     autoComplete="current-password"
                   />
