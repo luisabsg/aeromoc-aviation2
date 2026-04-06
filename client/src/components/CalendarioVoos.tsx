@@ -63,7 +63,6 @@ export default function CalendarioVoos({ userId, role }: CalendarioVoosProps) {
     }
 
     const { data, error } = await query.order('horario');
-    console.log('DEBUG fetchAgendamentos:', { role, userId, start, end, data, error });
     if (mountedRef.current) {
       if (!error && data) {
         setAgendamentos(data as AgendamentoComNomes[]);
