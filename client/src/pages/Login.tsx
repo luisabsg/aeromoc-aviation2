@@ -22,32 +22,21 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-
-  if (!email || !password) {
-    toast.error('Preencha e-mail e senha.');
-    return;
-  }
-
-  try {
-    setLoading(true);
-
-    const { error } = await signIn(email, password);
-
-    if (error) {
-      toast.error('Credenciais inválidas. Verifique e tente novamente.');
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      toast.error('Preencha e-mail e senha.');
       return;
     }
-
-    navigate('/dashboard');
-  } catch (err) {
-    console.error('Erro inesperado no login:', err);
-    toast.error('Erro inesperado ao entrar.');
-  } finally {
+    setLoading(true);
+    const { error } = await signIn(email, password);
     setLoading(false);
-  }
-};
+    if (error) {
+      toast.error('Credenciais inválidas. Verifique e tente novamente.');
+    } else {
+      navigate('/dashboard');
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-gradient-to-br from-[#F4F6FA] via-white to-[#F0F3F8]">
