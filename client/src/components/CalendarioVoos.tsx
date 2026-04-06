@@ -3,7 +3,7 @@
  * Design: Clean Aviation Dashboard
  * Shared by both aluno and instrutor views
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { formatDate, statusColor, statusDot, statusLabel, type StatusType } from '@/lib/utils';
 import type { Agendamento, Profile, Bloqueio } from '@/lib/supabase';
@@ -29,8 +29,16 @@ export default function CalendarioVoos({ userId, role }: CalendarioVoosProps) {
   const [bloqueios, setBloqueios] = useState<Bloqueio[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mountedRef.current) return;
     fetchAgendamentos();
     fetchBloqueios();
   }, [currentDate, userId, role]);
@@ -55,10 +63,15 @@ export default function CalendarioVoos({ userId, role }: CalendarioVoosProps) {
     }
 
     const { data, error } = await query.order('horario');
-    if (!error && data) {
-      setAgendamentos(data as AgendamentoComNomes[]);
+    console.log('DEBUG fetchAgendamentos:', { role, userId, start, end, data, error });
+    if (mountedRef.current) {
+      if (!error && data) {
+        setAgendamentos(data as AgendamentoComNomes[]);
+      } else if (error) {
+        console.error('Erro ao buscar agendamentos:', error);
+      }
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const fetchBloqueios = async () => {
@@ -78,7 +91,7 @@ export default function CalendarioVoos({ userId, role }: CalendarioVoosProps) {
     // Aluno vê TODOS os bloqueios (de todos os instrutores)
 
     const { data } = await query;
-    if (data) setBloqueios(data as any);
+    if (mountedRef.current && data) setBloqueios(data as any);
   };
 
   const days = eachDayOfInterval({
