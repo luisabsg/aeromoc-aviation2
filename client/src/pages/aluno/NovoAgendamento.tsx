@@ -16,6 +16,7 @@ import type { Profile, Bloqueio } from '@/lib/supabase';
 
 export default function NovoAgendamento() {
   const { profile } = useAuth();
+
   const [instrutores, setInstrutores] = useState<Profile[]>([]);
   const [data, setData] = useState('');
   const [horario, setHorario] = useState('');
@@ -29,20 +30,146 @@ export default function NovoAgendamento() {
   const allSlots = generateTimeSlots();
 
   useEffect(() => {
+    let ativo = true;
+
+    const fetchInstrutores = async () => {
+      try {
+        setLoadingInstrutores(true);
+
+        const { data: profs, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('role', 'professor');
+
+        if (!ativo) return;
+
+        if (error) {
+          console.error('Erro ao buscar instrutores:', error);
+          toast.error('Não foi possível carregar os instrutores.');
+          setInstrutores([]);
+          return;
+        }
+
+        setInstrutores((profs as Profile[]) ?? []);
+      } catch (err) {
+        if (!ativo) return;
+        console.error('Falha inesperada ao buscar instrutores:', err);
+        toast.error('Erro inesperado ao carregar os instrutores.');
+        setInstrutores([]);
+      } finally {
+        if (ativo) {
+          setLoadingInstrutores(false);
+        }
+      }
+    };
+
     fetchInstrutores();
+
+    return () => {
+      ativo = false;
+    };
   }, []);
 
   useEffect(() => {
-    if (data && instrutorId) {
-      fetchBloqueiosEOcupados();
-    } else {
-      setBloqueios([]);
-      setHorariosOcupados([]);
-    }
-    setHorario('');
+    let ativo = true;
+
+    const fetchBloqueiosEOcupados = async () => {
+      if (!data || !instrutorId) {
+        setBloqueios([]);
+        setHorariosOcupados([]);
+        setHorario('');
+        return;
+      }
+
+      try {
+        const [
+          { data: bl, error: bloqueiosError },
+          { data: ag, error: agendamentosError },
+        ] = await Promise.all([
+          supabase
+            .from('bloqueios')
+            .select('*')
+            .eq('instrutor_id', instrutorId)
+            .eq('data', data),
+          supabase
+            .from('agendamentos')
+            .select('horario')
+            .eq('instrutor_id', instrutorId)
+            .eq('data', data)
+            .in('status', ['pendente', 'confirmado']),
+        ]);
+
+        if (!ativo) return;
+
+        if (bloqueiosError) {
+          console.error('Erro ao buscar bloqueios:', bloqueiosError);
+        }
+
+        if (agendamentosError) {
+          console.error('Erro ao buscar horários ocupados:', agendamentosError);
+        }
+
+        setBloqueios((bl as Bloqueio[]) ?? []);
+        setHorariosOcupados((ag ?? []).map((a: { horario: string }) => a.horario));
+      } catch (err) {
+        if (!ativo) return;
+        console.error('Erro inesperado ao buscar bloqueios e horários:', err);
+        setBloqueios([]);
+        setHorariosOcupados([]);
+      } finally {
+        if (ativo) {
+          setHorario('');
+        }
+      }
+    };
+
+    fetchBloqueiosEOcupados();
+
+    return () => {
+      ativo = false;
+    };
   }, [data, instrutorId]);
 
-  // Validar se horário está bloqueado ANTES de enviar
+  useEffect(() => {
+    let ativo = true;
+
+    const checkAgendamentoAluno = async () => {
+      if (!data || !profile?.id) {
+        if (ativo) setAgendamentosHoje([]);
+        return;
+      }
+
+      try {
+        const { data: ag, error } = await supabase
+          .from('agendamentos')
+          .select('id')
+          .eq('aluno_id', profile.id)
+          .eq('data', data)
+          .in('status', ['pendente', 'confirmado']);
+
+        if (!ativo) return;
+
+        if (error) {
+          console.error('Erro ao verificar agendamento do aluno:', error);
+          setAgendamentosHoje([]);
+          return;
+        }
+
+        setAgendamentosHoje((ag ?? []).map((a: { id: string }) => a.id));
+      } catch (err) {
+        if (!ativo) return;
+        console.error('Erro inesperado ao verificar agendamento do aluno:', err);
+        setAgendamentosHoje([]);
+      }
+    };
+
+    checkAgendamentoAluno();
+
+    return () => {
+      ativo = false;
+    };
+  }, [data, profile?.id]);
+
   const isHorarioBlocked = (slot: string): boolean => {
     for (const b of bloqueios) {
       if (isTimeBlocked(slot, b.horario_inicio, b.horario_fim)) return true;
@@ -50,95 +177,76 @@ export default function NovoAgendamento() {
     return false;
   };
 
-  useEffect(() => {
-    if (data && profile?.id) {
-      checkAgendamentoAluno();
-    }
-  }, [data]);
-
-  const fetchInstrutores = async () => {
-    setLoadingInstrutores(true);
-    const { data: profs, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('role', 'professor');
-    if (!error && profs) setInstrutores(profs as Profile[]);
-    setLoadingInstrutores(false);
-  };
-
-  const fetchBloqueiosEOcupados = async () => {
-    const [{ data: bl }, { data: ag }] = await Promise.all([
-      supabase
-        .from('bloqueios')
-        .select('*')
-        .eq('instrutor_id', instrutorId)
-        .eq('data', data),
-      supabase
-        .from('agendamentos')
-        .select('horario')
-        .eq('instrutor_id', instrutorId)
-        .eq('data', data)
-        .in('status', ['pendente', 'confirmado']),
-    ]);
-    setBloqueios((bl as Bloqueio[]) ?? []);
-    setHorariosOcupados((ag ?? []).map((a: { horario: string }) => a.horario));
-  };
-
-  const checkAgendamentoAluno = async () => {
-    const { data: ag } = await supabase
-      .from('agendamentos')
-      .select('id')
-      .eq('aluno_id', profile!.id)
-      .eq('data', data)
-      .in('status', ['pendente', 'confirmado']);
-    setAgendamentosHoje((ag ?? []).map((a: { id: string }) => a.id));
-  };
-
   const isSlotDisabled = (slot: string): boolean => {
     if (horariosOcupados.includes(slot)) return true;
+
     for (const b of bloqueios) {
       if (isTimeBlocked(slot, b.horario_inicio, b.horario_fim)) return true;
     }
+
     return false;
   };
 
-  const availableSlots = allSlots.filter(s => !isSlotDisabled(s));
+  const availableSlots = allSlots.filter((s) => !isSlotDisabled(s));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!profile?.id) {
+      toast.error('Usuário não identificado. Faça login novamente.');
+      return;
+    }
+
     if (!data || !horario || !instrutorId) {
       toast.error('Preencha todos os campos.');
       return;
     }
+
     if (agendamentosHoje.length > 0) {
       toast.error('Você já possui um agendamento neste dia.');
       return;
     }
+
     if (isHorarioBlocked(horario)) {
       toast.error('Este horário está bloqueado pelo instrutor.');
       return;
     }
+
     if (horariosOcupados.includes(horario)) {
       toast.error('Este horário já está reservado.');
       return;
     }
-    setLoading(true);
-    const { error } = await supabase.from('agendamentos').insert({
-      aluno_id: profile!.id,
-      instrutor_id: instrutorId,
-      data,
-      horario,
-      status: 'pendente',
-    });
-    setLoading(false);
-    if (error) {
-      console.error('Erro ao criar agendamento:', error);
-      toast.error(`Erro: ${error.message || 'Tente novamente'}`);
-    } else {
+
+    try {
+      setLoading(true);
+
+      const { error } = await supabase.from('agendamentos').insert({
+        aluno_id: profile.id,
+        instrutor_id: instrutorId,
+        data,
+        horario,
+        status: 'pendente',
+      });
+
+      if (error) {
+        console.error('Erro ao criar agendamento:', error);
+        toast.error(`Erro: ${error.message || 'Tente novamente'}`);
+        return;
+      }
+
       toast.success('Aula solicitada com sucesso! Aguarde a confirmação do instrutor.');
+
       setData('');
       setHorario('');
       setInstrutorId('');
+      setBloqueios([]);
+      setHorariosOcupados([]);
+      setAgendamentosHoje([]);
+    } catch (err) {
+      console.error('Erro inesperado ao criar agendamento:', err);
+      toast.error('Erro inesperado ao solicitar aula.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -147,7 +255,6 @@ export default function NovoAgendamento() {
   return (
     <DashboardLayout title="Novo Agendamento">
       <div className="max-w-xl mx-auto">
-        {/* Header card */}
         <div
           className="rounded-2xl p-6 mb-6 text-white"
           style={{ background: 'linear-gradient(135deg, #1B2A6B 0%, #0D1B3E 100%)' }}
@@ -163,7 +270,6 @@ export default function NovoAgendamento() {
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Data */}
             <div className="space-y-2">
               <Label className="flex items-center gap-2 text-gray-700 font-semibold text-sm">
                 <CalendarDays className="w-4 h-4 text-[#1B2A6B]" />
@@ -173,17 +279,17 @@ export default function NovoAgendamento() {
                 type="date"
                 value={data}
                 min={today}
-                onChange={e => setData(e.target.value)}
+                onChange={(e) => setData(e.target.value)}
                 className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-[#1B2A6B] focus:ring-2 focus:ring-[#1B2A6B]/10 bg-white text-gray-800"
               />
             </div>
 
-            {/* Instrutor */}
             <div className="space-y-2">
               <Label className="flex items-center gap-2 text-gray-700 font-semibold text-sm">
                 <User className="w-4 h-4 text-[#1B2A6B]" />
                 Instrutor
               </Label>
+
               {loadingInstrutores ? (
                 <div className="flex items-center gap-2 text-gray-400 text-sm py-2">
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -195,7 +301,7 @@ export default function NovoAgendamento() {
                     <SelectValue placeholder="Selecione o instrutor" />
                   </SelectTrigger>
                   <SelectContent>
-                    {instrutores.map(inst => (
+                    {instrutores.map((inst) => (
                       <SelectItem key={inst.id} value={inst.id}>
                         {inst.nome}
                       </SelectItem>
@@ -205,12 +311,12 @@ export default function NovoAgendamento() {
               )}
             </div>
 
-            {/* Horário */}
             <div className="space-y-2">
               <Label className="flex items-center gap-2 text-gray-700 font-semibold text-sm">
                 <Clock className="w-4 h-4 text-[#1B2A6B]" />
                 Horário
               </Label>
+
               {!data || !instrutorId ? (
                 <p className="text-gray-400 text-sm py-2 italic">
                   Selecione a data e o instrutor primeiro.
@@ -225,7 +331,7 @@ export default function NovoAgendamento() {
                     <SelectValue placeholder="Selecione o horário" />
                   </SelectTrigger>
                   <SelectContent className="max-h-60">
-                    {availableSlots.map(slot => (
+                    {availableSlots.map((slot) => (
                       <SelectItem key={slot} value={slot}>
                         {slot}
                       </SelectItem>
@@ -235,7 +341,6 @@ export default function NovoAgendamento() {
               )}
             </div>
 
-            {/* Alerta 1 aula por dia */}
             {agendamentosHoje.length > 0 && (
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-800 text-sm">
                 Você já possui um agendamento neste dia. Apenas 1 aula por dia é permitida.
@@ -249,9 +354,15 @@ export default function NovoAgendamento() {
               style={{ background: '#1B2A6B' }}
             >
               {loading ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Solicitando...</>
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Solicitando...
+                </>
               ) : (
-                <><PlaneTakeoff className="w-4 h-4 mr-2" />Solicitar Aula</>
+                <>
+                  <PlaneTakeoff className="w-4 h-4 mr-2" />
+                  Solicitar Aula
+                </>
               )}
             </Button>
           </form>
