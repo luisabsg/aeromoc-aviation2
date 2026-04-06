@@ -57,6 +57,11 @@ const adminNav: NavItem[] = [
     href: '/dashboard/admin/notificacoes',
     icon: <Bell className="w-5 h-5" />,
   },
+  {
+  label: 'Usuários',
+  href: '/dashboard/admin/usuarios',
+  icon: <Users className="w-5 h-5" />,
+},
 ];
 
 const alunoNav: NavItem[] = [

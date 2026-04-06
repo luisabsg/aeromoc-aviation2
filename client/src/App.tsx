@@ -34,6 +34,7 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import AdminEscalas from "./pages/admin/Escalas";
 import AdminNotificacoes from "./pages/admin/Notificacoes";
 import AdminRelatorios from "./pages/admin/Relatorios";
+import AdminUsuarios from "./pages/admin/Usuarios";
 
 function Router() {
   return (
@@ -123,6 +124,12 @@ function Router() {
           <AdminRelatorios />
         </ProtectedRoute>
       </Route>
+
+      <Route path="/dashboard/admin/usuarios">
+  <ProtectedRoute requiredRole="admin">
+    <AdminUsuarios />
+  </ProtectedRoute>
+</Route>
 
       {/* 404 sempre por último */}
       <Route path="/404" component={NotFound} />
