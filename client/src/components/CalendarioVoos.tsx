@@ -242,7 +242,7 @@ export default function CalendarioVoos({ userId, role }: CalendarioVoosProps) {
                             : 'bg-amber-100 text-amber-800'
                         )}
                       >
-                       {ag.horario}
+                        {isReservaDeOutroAluno(ag) ? 'Reservado' : ag.horario}
                       </div>
                     ))}
 
