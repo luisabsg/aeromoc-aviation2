@@ -243,7 +243,7 @@ export default function CalendarioVoos({ userId, role }: CalendarioVoosProps) {
                     <span>
                       {role === 'aluno'
                         ? (ag.instrutor as any)?.nome ?? 'Instrutor'
-                        : ag.status === 'confirmado'
+                        : role === 'professor' && ag.status === 'confirmado'
                         ? (ag.aluno as any)?.nome ?? 'Aluno'
                         : 'Aluno'}
                     </span>
