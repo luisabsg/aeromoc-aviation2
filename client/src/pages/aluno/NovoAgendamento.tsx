@@ -320,7 +320,7 @@ export default function NovoAgendamento() {
         }
 
         toast.success('Agendamento atualizado com sucesso!');
-        window.location.href = '/dashboard/meus-agendamentos';
+        window.location.href = '/dashboard/agendamentos';
         return;
       }
 

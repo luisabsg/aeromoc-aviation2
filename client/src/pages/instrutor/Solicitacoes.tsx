@@ -15,11 +15,28 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import {
-  Loader2, ClipboardList, Clock, CalendarDays, User,
-  CheckCircle, XCircle, MessageSquare, Filter
+  Loader2,
+  ClipboardList,
+  Clock,
+  CalendarDays,
+  User,
+  CheckCircle,
+  XCircle,
+  MessageSquare,
+  Filter,
+  ArrowRight,
+  AlertCircle,
+  BellPlus,
+  Calendar,
+  Plane,
 } from 'lucide-react';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
 
 interface AgendamentoComAluno extends Agendamento {
@@ -169,16 +186,74 @@ export default function Solicitacoes() {
     pendente: agendamentos.filter((a) => a.status === 'pendente').length,
     confirmado: agendamentos.filter((a) => a.status === 'confirmado').length,
     recusado: agendamentos.filter((a) => a.status === 'recusado').length,
+    realizado: agendamentos.filter((a) => a.status === 'realizado').length,
   };
+
+  const agora = new Date();
+
+  const proximasConfirmadas = agendamentos
+    .filter((ag) => {
+      if (ag.status !== 'confirmado') return false;
+      const dataHora = new Date(`${ag.data}T${ag.horario}`);
+      return dataHora >= agora;
+    })
+    .sort((a, b) => {
+      const da = new Date(`${a.data}T${a.horario}`).getTime();
+      const db = new Date(`${b.data}T${b.horario}`).getTime();
+      return da - db;
+    });
+
+  const proximaAula = proximasConfirmadas[0] ?? null;
 
   return (
     <DashboardLayout title="Solicitações">
-      <div className="max-w-3xl mx-auto">
-        <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-6">
+          <div className="bg-[#1B2A6B] text-white rounded-2xl px-6 py-5 flex items-center justify-between gap-4 shadow-md flex-wrap">
+            <div className="flex-1 min-w-[240px]">
+              <h2 className="text-2xl font-bold">
+                Bem-vindo, {profile?.nome ?? 'Instrutor'}! ✈️
+              </h2>
+              <p className="text-sm text-blue-100 mt-1">
+                Gerencie suas aulas de voo e acompanhe seus agendamentos
+              </p>
+
+              <div className="flex gap-3 mt-4 flex-wrap">
+                <Button
+                  onClick={() => {
+                    window.location.href = '/dashboard/bloqueios';
+                  }}
+                  className="bg-white text-[#1B2A6B] hover:bg-gray-100"
+                >
+                  <BellPlus className="w-4 h-4 mr-2" />
+                  Criar bloqueio
+                </Button>
+
+                <Button
+                  onClick={() => {
+                    window.location.href = '/dashboard/calendario';
+                  }}
+                  variant="outline"
+                  className="border-white text-white hover:bg-white/10"
+                >
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Ver calendário
+                </Button>
+              </div>
+            </div>
+
+            <div className="shrink-0">
+              <Plane className="w-12 h-12 text-blue-200" />
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
           {[
             { label: 'Pendentes', count: counts.pendente, color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200' },
             { label: 'Confirmados', count: counts.confirmado, color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
             { label: 'Recusados', count: counts.recusado, color: 'text-red-600', bg: 'bg-red-50 border-red-200' },
+            { label: 'Realizados', count: counts.realizado, color: 'text-gray-700', bg: 'bg-gray-100 border-gray-300' },
           ].map((s) => (
             <div key={s.label} className={`rounded-xl border p-4 ${s.bg}`}>
               <p className={`text-2xl font-bold ${s.color}`}>{s.count}</p>
@@ -186,6 +261,49 @@ export default function Solicitacoes() {
             </div>
           ))}
         </div>
+
+        {proximaAula ? (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow mb-6">
+            <div className="flex items-center gap-4 p-6 flex-wrap">
+              <div className="w-1 h-20 rounded-full bg-green-500 shrink-0" />
+              <div className="flex-1">
+                <p className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">
+                  Sua próxima aula
+                </p>
+                <h3 className="text-2xl font-bold text-[#1B2A6B] mb-3">
+                  {formatDate(proximaAula.data)} às {proximaAula.horario}
+                </h3>
+                <div className="flex items-center gap-4 flex-wrap">
+                  <div className="flex items-center gap-2 text-gray-700">
+                    <User className="w-4 h-4 text-gray-400" />
+                    <span className="font-semibold">
+                      {(proximaAula.aluno as any)?.nome ?? 'Aluno'}
+                    </span>
+                  </div>
+                  <StatusBadge status={proximaAula.status} />
+                </div>
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchAgendamentos}
+                className="border-[#1B2A6B] text-[#1B2A6B] hover:bg-[#1B2A6B]/5 flex items-center gap-2"
+              >
+                Ver Detalhes
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center mb-6">
+            <AlertCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <h3 className="text-gray-600 font-semibold mb-1">Nenhuma aula confirmada futura</h3>
+            <p className="text-gray-400 text-sm">
+              Aguarde novas confirmações ou atualize a lista de solicitações.
+            </p>
+          </div>
+        )}
 
         <div className="flex items-center gap-3 mb-4">
           <Filter className="w-4 h-4 text-gray-400" />
@@ -199,6 +317,7 @@ export default function Solicitacoes() {
               <SelectItem value="confirmado">Confirmados</SelectItem>
               <SelectItem value="recusado">Recusados</SelectItem>
               <SelectItem value="cancelado">Cancelados</SelectItem>
+              <SelectItem value="realizado">Realizados</SelectItem>
             </SelectContent>
           </Select>
           <Button
@@ -235,6 +354,8 @@ export default function Solicitacoes() {
                     ? 'border-green-100'
                     : ag.status === 'cancelado'
                     ? 'border-gray-200'
+                    : ag.status === 'realizado'
+                    ? 'border-gray-300'
                     : 'border-gray-100'
                 }`}
               >
@@ -247,6 +368,8 @@ export default function Solicitacoes() {
                         ? 'bg-green-500'
                         : ag.status === 'cancelado'
                         ? 'bg-gray-400'
+                        : ag.status === 'realizado'
+                        ? 'bg-gray-500'
                         : 'bg-amber-400'
                     }`}
                   />

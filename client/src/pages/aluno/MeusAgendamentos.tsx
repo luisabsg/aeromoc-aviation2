@@ -105,7 +105,7 @@ export default function MeusAgendamentos() {
   };
 
   const editar = (id: string) => {
-    navigate(`/dashboard/novo-agendamento?edit=${id}`);
+    navigate(`/dashboard/novo?edit=${id}`);
   };
 
   const filteredAgendamentos = agendamentos.filter((ag) => {
