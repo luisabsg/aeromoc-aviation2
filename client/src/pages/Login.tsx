@@ -27,7 +27,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 
   if (loading) return;
 
-  if (!email || !password) {
+  if (!email.trim() || !password.trim()) {
     toast.error('Preencha e-mail e senha.');
     return;
   }
@@ -41,6 +41,9 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
       toast.error(error);
       return;
     }
+
+    setEmail(email.trim());
+    setPassword(password);
 
     navigate('/dashboard');
   } catch (err) {
