@@ -31,10 +31,14 @@ export default function Solicitacoes() {
   const [agendamentos, setAgendamentos] = useState<AgendamentoComAluno[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>('todos');
+
   const [recusandoId, setRecusandoId] = useState<string | null>(null);
+  const [cancelandoId, setCancelandoId] = useState<string | null>(null);
   const [observacao, setObservacao] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+
   const [showRecusarDialog, setShowRecusarDialog] = useState(false);
+  const [showCancelarDialog, setShowCancelarDialog] = useState(false);
 
   useEffect(() => {
     fetchAgendamentos();
@@ -42,32 +46,47 @@ export default function Solicitacoes() {
 
   const fetchAgendamentos = async () => {
     if (!profile) return;
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('agendamentos')
-      .select('*, aluno:aluno_id(id, nome, email, role)')
-      .eq('instrutor_id', profile.id)
-      .order('data', { ascending: false })
-      .order('horario', { ascending: false });
 
-    if (!error && data) {
-      setAgendamentos(data as AgendamentoComAluno[]);
+    try {
+      setLoading(true);
+
+      const { data, error } = await supabase
+        .from('agendamentos')
+        .select('*, aluno:aluno_id(id, nome, email, role)')
+        .eq('instrutor_id', profile.id)
+        .order('data', { ascending: false })
+        .order('horario', { ascending: false });
+
+      if (error) {
+        console.error('Erro ao buscar agendamentos:', error);
+        toast.error('Erro ao carregar solicitações.');
+        setAgendamentos([]);
+        return;
+      }
+
+      setAgendamentos((data as AgendamentoComAluno[]) ?? []);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const aceitar = async (id: string) => {
-    setActionLoading(true);
-    const { error } = await supabase
-      .from('agendamentos')
-      .update({ status: 'confirmado' })
-      .eq('id', id);
-    setActionLoading(false);
-    if (error) {
-      toast.error('Erro ao aceitar agendamento.');
-    } else {
-      toast.success('Agendamento aceito com sucesso!');
-      fetchAgendamentos();
+    try {
+      setActionLoading(true);
+
+      const { error } = await supabase
+        .from('agendamentos')
+        .update({ status: 'confirmado', observacao: null })
+        .eq('id', id);
+
+      if (error) {
+        toast.error('Erro ao aceitar agendamento.');
+      } else {
+        toast.success('Agendamento aceito com sucesso!');
+        fetchAgendamentos();
+      }
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -82,44 +101,85 @@ export default function Solicitacoes() {
       toast.error('A observação é obrigatória ao recusar.');
       return;
     }
-    setActionLoading(true);
-    const { error } = await supabase
-      .from('agendamentos')
-      .update({ status: 'recusado', observacao: observacao.trim() })
-      .eq('id', recusandoId);
-    setActionLoading(false);
-    setShowRecusarDialog(false);
-    setRecusandoId(null);
-    setObservacao('');
-    if (error) {
-      toast.error('Erro ao recusar agendamento.');
-    } else {
-      toast.success('Agendamento recusado.');
-      fetchAgendamentos();
+
+    try {
+      setActionLoading(true);
+
+      const { error } = await supabase
+        .from('agendamentos')
+        .update({ status: 'recusado', observacao: observacao.trim() })
+        .eq('id', recusandoId);
+
+      setShowRecusarDialog(false);
+      setRecusandoId(null);
+      setObservacao('');
+
+      if (error) {
+        toast.error('Erro ao recusar agendamento.');
+      } else {
+        toast.success('Agendamento recusado.');
+        fetchAgendamentos();
+      }
+    } finally {
+      setActionLoading(false);
     }
   };
 
-  const filtered = agendamentos.filter(ag => {
+  const openCancelar = (id: string) => {
+    setCancelandoId(id);
+    setObservacao('');
+    setShowCancelarDialog(true);
+  };
+
+  const cancelarConfirmado = async () => {
+    if (!observacao.trim()) {
+      toast.error('Informe o motivo do cancelamento.');
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+
+      const { error } = await supabase
+        .from('agendamentos')
+        .update({ status: 'cancelado', observacao: observacao.trim() })
+        .eq('id', cancelandoId);
+
+      setShowCancelarDialog(false);
+      setCancelandoId(null);
+      setObservacao('');
+
+      if (error) {
+        toast.error('Erro ao cancelar aula.');
+      } else {
+        toast.success('Aula cancelada com sucesso.');
+        fetchAgendamentos();
+      }
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const filtered = agendamentos.filter((ag) => {
     if (filterStatus === 'todos') return true;
     return ag.status === filterStatus;
   });
 
   const counts = {
-    pendente: agendamentos.filter(a => a.status === 'pendente').length,
-    confirmado: agendamentos.filter(a => a.status === 'confirmado').length,
-    recusado: agendamentos.filter(a => a.status === 'recusado').length,
+    pendente: agendamentos.filter((a) => a.status === 'pendente').length,
+    confirmado: agendamentos.filter((a) => a.status === 'confirmado').length,
+    recusado: agendamentos.filter((a) => a.status === 'recusado').length,
   };
 
   return (
     <DashboardLayout title="Solicitações">
       <div className="max-w-3xl mx-auto">
-        {/* Stats row */}
         <div className="grid grid-cols-3 gap-3 mb-6">
           {[
             { label: 'Pendentes', count: counts.pendente, color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200' },
             { label: 'Confirmados', count: counts.confirmado, color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
             { label: 'Recusados', count: counts.recusado, color: 'text-red-600', bg: 'bg-red-50 border-red-200' },
-          ].map(s => (
+          ].map((s) => (
             <div key={s.label} className={`rounded-xl border p-4 ${s.bg}`}>
               <p className={`text-2xl font-bold ${s.color}`}>{s.count}</p>
               <p className="text-gray-600 text-xs font-medium mt-0.5">{s.label}</p>
@@ -127,7 +187,6 @@ export default function Solicitacoes() {
           ))}
         </div>
 
-        {/* Filter */}
         <div className="flex items-center gap-3 mb-4">
           <Filter className="w-4 h-4 text-gray-400" />
           <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -139,6 +198,7 @@ export default function Solicitacoes() {
               <SelectItem value="pendente">Pendentes</SelectItem>
               <SelectItem value="confirmado">Confirmados</SelectItem>
               <SelectItem value="recusado">Recusados</SelectItem>
+              <SelectItem value="cancelado">Cancelados</SelectItem>
             </SelectContent>
           </Select>
           <Button
@@ -165,21 +225,29 @@ export default function Solicitacoes() {
           </div>
         ) : (
           <div className="space-y-3">
-            {filtered.map(ag => (
+            {filtered.map((ag) => (
               <div
                 key={ag.id}
                 className={`bg-white rounded-xl border shadow-sm overflow-hidden transition-all hover:shadow-md ${
-                  ag.status === 'recusado' ? 'border-red-100' :
-                  ag.status === 'confirmado' ? 'border-green-100' :
-                  'border-gray-100'
+                  ag.status === 'recusado'
+                    ? 'border-red-100'
+                    : ag.status === 'confirmado'
+                    ? 'border-green-100'
+                    : ag.status === 'cancelado'
+                    ? 'border-gray-200'
+                    : 'border-gray-100'
                 }`}
               >
                 <div className="flex">
                   <div
                     className={`w-1 shrink-0 ${
-                      ag.status === 'recusado' ? 'bg-red-400' :
-                      ag.status === 'confirmado' ? 'bg-green-500' :
-                      'bg-amber-400'
+                      ag.status === 'recusado'
+                        ? 'bg-red-400'
+                        : ag.status === 'confirmado'
+                        ? 'bg-green-500'
+                        : ag.status === 'cancelado'
+                        ? 'bg-gray-400'
+                        : 'bg-amber-400'
                     }`}
                   />
                   <div className="flex-1 p-4">
@@ -210,6 +278,7 @@ export default function Solicitacoes() {
 
                       <div className="flex items-center gap-2 flex-wrap">
                         <StatusBadge status={ag.status} />
+
                         {ag.status === 'pendente' && (
                           <>
                             <Button
@@ -233,6 +302,19 @@ export default function Solicitacoes() {
                             </Button>
                           </>
                         )}
+
+                        {ag.status === 'confirmado' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openCancelar(ag.id)}
+                            disabled={actionLoading}
+                            className="text-red-600 border-red-200 hover:bg-red-50 text-xs h-8"
+                          >
+                            <XCircle className="w-3.5 h-3.5 mr-1" />
+                            Cancelar Aula
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -243,7 +325,6 @@ export default function Solicitacoes() {
         )}
       </div>
 
-      {/* Recusar dialog */}
       <Dialog open={showRecusarDialog} onOpenChange={setShowRecusarDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -261,7 +342,7 @@ export default function Solicitacoes() {
             </Label>
             <Textarea
               value={observacao}
-              onChange={e => setObservacao(e.target.value)}
+              onChange={(e) => setObservacao(e.target.value)}
               placeholder="Ex: Indisponível neste horário por motivo de manutenção da aeronave..."
               rows={4}
               className="border-gray-200 focus:border-red-400 resize-none"
@@ -280,6 +361,47 @@ export default function Solicitacoes() {
               className="bg-red-600 hover:bg-red-700 text-white"
             >
               {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar Recusa'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showCancelarDialog} onOpenChange={setShowCancelarDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <XCircle className="w-5 h-5" />
+              Cancelar Aula Confirmada
+            </DialogTitle>
+            <DialogDescription>
+              Informe o motivo do cancelamento. Esta mensagem será exibida para o aluno.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <Label className="text-gray-700 font-medium text-sm">
+              Motivo do cancelamento <span className="text-red-500">*</span>
+            </Label>
+            <Textarea
+              value={observacao}
+              onChange={(e) => setObservacao(e.target.value)}
+              placeholder="Ex: Aula cancelada por indisponibilidade do instrutor ou manutenção da aeronave..."
+              rows={4}
+              className="border-gray-200 focus:border-red-400 resize-none"
+            />
+            {!observacao.trim() && (
+              <p className="text-red-500 text-xs">Campo obrigatório.</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCancelarDialog(false)}>
+              Voltar
+            </Button>
+            <Button
+              onClick={cancelarConfirmado}
+              disabled={actionLoading || !observacao.trim()}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar Cancelamento'}
             </Button>
           </DialogFooter>
         </DialogContent>
