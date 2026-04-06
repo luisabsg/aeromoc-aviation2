@@ -315,5 +315,6 @@ export default function DashboardAluno() {
           </>
         )}
       </div>
-    </DashboardLayout>
+   </DashboardLayout>
+);
 }
