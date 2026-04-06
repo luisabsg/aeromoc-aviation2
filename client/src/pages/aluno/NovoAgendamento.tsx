@@ -91,10 +91,12 @@ export default function NovoAgendamento() {
             .select('*')
             .eq('instrutor_id', instrutorId)
             .eq('data', data),
+
+          // horários ocupados agora são globais por dia,
+          // independentemente do instrutor escolhido
           supabase
             .from('agendamentos')
             .select('horario')
-            .eq('instrutor_id', instrutorId)
             .eq('data', data)
             .in('status', ['pendente', 'confirmado']),
         ]);
@@ -220,6 +222,26 @@ export default function NovoAgendamento() {
     try {
       setLoading(true);
 
+      // dupla checagem no banco antes de inserir
+      const { data: conflitoGlobal, error: conflitoError } = await supabase
+        .from('agendamentos')
+        .select('id')
+        .eq('data', data)
+        .eq('horario', horario)
+        .in('status', ['pendente', 'confirmado'])
+        .maybeSingle();
+
+      if (conflitoError) {
+        console.error('Erro ao validar conflito global:', conflitoError);
+        toast.error('Erro ao validar disponibilidade do horário.');
+        return;
+      }
+
+      if (conflitoGlobal) {
+        toast.error('Este horário já está reservado para este dia.');
+        return;
+      }
+
       const { error } = await supabase.from('agendamentos').insert({
         aluno_id: profile.id,
         instrutor_id: instrutorId,
@@ -323,7 +345,7 @@ export default function NovoAgendamento() {
                 </p>
               ) : availableSlots.length === 0 ? (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">
-                  Nenhum horário disponível para esta data e instrutor.
+                  Nenhum horário disponível para esta data.
                 </div>
               ) : (
                 <Select value={horario} onValueChange={setHorario}>
