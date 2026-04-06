@@ -44,8 +44,7 @@ export default function CalendarioVoos({ userId, role }: CalendarioVoosProps) {
       .from('agendamentos')
       .select('*, aluno:aluno_id(id, nome, email, role), instrutor:instrutor_id(id, nome, email, role)')
       .gte('data', start)
-      .lte('data', end)
-      .in('status', ['pendente', 'confirmado']);
+      .lte('data', end);
 
     if (role === 'aluno') {
       // Alunos veem: suas solicitacoes (pendente) + TODOS os confirmados (reservas)
