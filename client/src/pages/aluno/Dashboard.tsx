@@ -1,4 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+/**
+ * AeroMoc Aviation — Dashboard do Aluno
+ * Design: Clean Aviation Dashboard
+ * Mostra resumo de aulas: próximas, aguardando, recusadas
+ */
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { formatDate } from '@/lib/utils';
@@ -29,65 +34,37 @@ export default function DashboardAluno() {
   const [agendamentos, setAgendamentos] = useState<AgendamentoComInstrutor[]>([]);
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
   const [loading, setLoading] = useState(true);
-  const mountedRef = useRef(true);
 
   useEffect(() => {
-    mountedRef.current = true;
-    
-    const fetchData = async () => {
-      await fetchAgendamentos();
-      await fetchNotificacoes();
-    };
-    
-    fetchData();
-
-    return () => {
-      mountedRef.current = false;
-    };
+    fetchAgendamentos();
+    fetchNotificacoes();
   }, [profile]);
 
   const fetchAgendamentos = async () => {
     if (!profile) return;
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('agendamentos')
-        .select('*, instrutor:instrutor_id(id, nome, email, role)')
-        .eq('aluno_id', profile.id)
-        .order('data', { ascending: true })
-        .order('horario', { ascending: true });
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('agendamentos')
+      .select('*, instrutor:instrutor_id(id, nome, email, role)')
+      .eq('aluno_id', profile.id)
+      .order('data', { ascending: true })
+      .order('horario', { ascending: true });
 
-      if (error) throw error;
-      if (!mountedRef.current) return;
+    if (!error && data) {
       setAgendamentos(data as AgendamentoComInstrutor[]);
-    } catch (err) {
-      if (mountedRef.current) {
-        console.error('Erro ao buscar agendamentos:', err);
-      }
-    } finally {
-      if (mountedRef.current) {
-        setLoading(false);
-      }
     }
+    setLoading(false);
   };
 
   const fetchNotificacoes = async () => {
-    try {
-      const { data } = await supabase
-        .from('notificacoes')
-        .select('*')
-        .eq('ativo', true)
-        .eq('lida', false)
-        .order('criado_em', { ascending: false })
-        .limit(3);
-      if (mountedRef.current) {
-        setNotificacoes(data as Notificacao[]);
-      }
-    } catch (err) {
-      if (mountedRef.current) {
-        console.error('Erro ao buscar notificações:', err);
-      }
-    }
+    const { data } = await supabase
+      .from('notificacoes')
+      .select('*')
+      .eq('ativo', true)
+      .eq('lida', false)
+      .order('criado_em', { ascending: false })
+      .limit(3);
+    if (data) setNotificacoes(data as Notificacao[]);
   };
 
   // Separar agendamentos por status
@@ -315,6 +292,6 @@ export default function DashboardAluno() {
           </>
         )}
       </div>
-   </DashboardLayout>
-);
+    </DashboardLayout>
+  );
 }
