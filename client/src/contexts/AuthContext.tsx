@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase, Profile } from '@/lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 
@@ -12,19 +12,37 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function withTimeout<T>(promise: Promise<T>, ms = 8000): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('Timeout ao aguardar resposta.')), ms);
+
+    promise
+      .then((value) => {
+        clearTimeout(timer);
+        resolve(value);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
+  });
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const authActionRef = useRef<'idle' | 'signing-in' | 'signing-out'>('idle');
 
   const fetchProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
+      const { data, error } = await withTimeout(
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle(),
+        8000
+      );
 
       if (error) {
         console.error('Erro ao buscar profile:', error);
@@ -48,10 +66,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (!currentUser) {
       setProfile(null);
+      setLoading(false);
       return;
     }
 
     await fetchProfile(currentUser.id);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -60,11 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const init = async () => {
       try {
         setLoading(true);
-
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
+        const { data, error } = await supabase.auth.getSession();
 
         if (!mounted) return;
 
@@ -72,19 +88,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.error('Erro ao obter sessão:', error);
           setUser(null);
           setProfile(null);
+          setLoading(false);
           return;
         }
 
-        await applySession(session);
+        await applySession(data.session);
       } catch (err) {
         console.error('Erro ao iniciar auth:', err);
         if (!mounted) return;
         setUser(null);
         setProfile(null);
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 
@@ -92,28 +106,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange((_, session) => {
       if (!mounted) return;
 
-      setTimeout(async () => {
+      setTimeout(() => {
         if (!mounted) return;
-
-        try {
-          if (authActionRef.current === 'signing-out' && event === 'SIGNED_OUT') {
-            setUser(null);
-            setProfile(null);
-            return;
-          }
-
-          await applySession(session);
-        } catch (err) {
+        applySession(session).catch((err) => {
           console.error('Erro no onAuthStateChange:', err);
-        } finally {
-          if (mounted) {
-            setLoading(false);
-            authActionRef.current = 'idle';
-          }
-        }
+          if (!mounted) return;
+          setLoading(false);
+        });
       }, 0);
     });
 
@@ -125,52 +127,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string): Promise<{ error: string | null }> => {
     try {
-      authActionRef.current = 'signing-in';
-      setLoading(true);
-
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { error } = await withTimeout(
+        supabase.auth.signInWithPassword({
+          email,
+          password,
+        }),
+        10000
+      );
 
       if (error) {
         console.error('Erro no login:', error);
-        authActionRef.current = 'idle';
         return { error: error.message };
       }
 
       return { error: null };
     } catch (err) {
       console.error('Erro inesperado no signIn:', err);
-      authActionRef.current = 'idle';
-      return { error: 'Erro inesperado ao fazer login.' };
-    } finally {
-      setLoading(false);
+      return { error: 'O login demorou demais ou falhou. Tente novamente.' };
     }
   };
 
   const signOut = async () => {
     try {
-      authActionRef.current = 'signing-out';
-
-      // limpa o estado imediatamente para evitar "sobra" do usuário anterior
-      setUser(null);
-      setProfile(null);
-      setLoading(true);
-
-      const { error } = await supabase.auth.signOut();
-
-      if (error) {
-        console.error('Erro ao sair:', error);
-      }
+      await supabase.auth.signOut();
     } catch (err) {
-      console.error('Erro inesperado ao sair:', err);
+      console.error('Erro ao sair:', err);
     } finally {
-      // garante limpeza total mesmo se o evento do Supabase atrasar
       setUser(null);
       setProfile(null);
       setLoading(false);
-      authActionRef.current = 'idle';
     }
   };
 
