@@ -34,7 +34,7 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import AdminEscalas from "./pages/admin/Escalas";
 import AdminNotificacoes from "./pages/admin/Notificacoes";
 import AdminRelatorios from "./pages/admin/Relatorios";
-import AdminUsuarios from "./pages/admin/Usuarios";
+import AdminUsuarios from "./pages/admin/usuarios";
 
 function Router() {
   return (
