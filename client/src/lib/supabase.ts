@@ -5,7 +5,7 @@ const supabaseKey = 'sb_publishable_6JA-gvKcTU7gFXMomu8MsA_ooTnER6d';
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
-export type UserRole = 'professor' | 'aluno';
+export type UserRole = 'professor' | 'aluno' | 'admin';
 
 export interface Profile {
   id: string;

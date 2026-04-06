@@ -34,6 +34,8 @@ interface Notificacao {
   mensagem: string;
   tipo: 'info' | 'aviso' | 'urgente';
   criado_em: string;
+  destinatario: 'aluno' | 'professor' | 'todos';
+  autor_role?: 'professor' | 'admin';
 }
 
 export default function DashboardAluno() {
@@ -108,22 +110,24 @@ export default function DashboardAluno() {
     setLoading(false);
   };
 
-  const fetchNotificacoes = async () => {
-    const { data, error } = await supabase
-      .from('notificacoes')
-      .select('*')
-      .eq('ativo', true)
-      .eq('lida', false)
-      .order('criado_em', { ascending: false })
-      .limit(3);
+const fetchNotificacoes = async () => {
+  if (!profile) return;
 
-    if (error) {
-      console.error('Erro ao buscar notificações:', error);
-      return;
-    }
+  const { data, error } = await supabase
+    .from('notificacoes')
+    .select('*')
+    .eq('ativo', true)
+    .in('destinatario', ['aluno', 'todos'])
+    .order('criado_em', { ascending: false })
+    .limit(3);
 
-    if (data) setNotificacoes(data as Notificacao[]);
-  };
+  if (error) {
+    console.error('Erro ao buscar notificações:', error);
+    return;
+  }
+
+  if (data) setNotificacoes(data as Notificacao[]);
+};
 
   const agora = new Date();
 

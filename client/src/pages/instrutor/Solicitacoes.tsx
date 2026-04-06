@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { Link } from 'wouter';
 import {
   Loader2,
   ClipboardList,
@@ -29,6 +30,7 @@ import {
   BellPlus,
   Calendar,
   Plane,
+  Info,
 } from 'lucide-react';
 import {
   Dialog,
@@ -43,9 +45,20 @@ interface AgendamentoComAluno extends Agendamento {
   aluno?: Profile;
 }
 
+interface Notificacao {
+  id: string;
+  titulo: string;
+  mensagem: string;
+  tipo: 'info' | 'aviso' | 'urgente';
+  criado_em: string;
+  destinatario: 'aluno' | 'professor' | 'todos';
+  autor_role?: 'professor' | 'admin';
+}
+
 export default function Solicitacoes() {
   const { profile } = useAuth();
   const [agendamentos, setAgendamentos] = useState<AgendamentoComAluno[]>([]);
+  const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>('todos');
 
@@ -58,7 +71,14 @@ export default function Solicitacoes() {
   const [showCancelarDialog, setShowCancelarDialog] = useState(false);
 
   useEffect(() => {
-    fetchAgendamentos();
+    if (!profile) return;
+
+    const carregar = async () => {
+      await fetchAgendamentos();
+      await fetchNotificacoes();
+    };
+
+    carregar();
   }, [profile]);
 
   const fetchAgendamentos = async () => {
@@ -84,6 +104,27 @@ export default function Solicitacoes() {
       setAgendamentos((data as AgendamentoComAluno[]) ?? []);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchNotificacoes = async () => {
+    if (!profile) return;
+
+    const { data, error } = await supabase
+      .from('notificacoes')
+      .select('*')
+      .eq('ativo', true)
+      .in('destinatario', ['professor', 'todos'])
+      .order('criado_em', { ascending: false })
+      .limit(3);
+
+    if (error) {
+      console.error('Erro ao buscar notificações:', error);
+      return;
+    }
+
+    if (data) {
+      setNotificacoes(data as Notificacao[]);
     }
   };
 
@@ -247,6 +288,32 @@ export default function Solicitacoes() {
             </div>
           </div>
         </div>
+
+        {notificacoes.length > 0 && (
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 shadow-sm mb-6">
+            <div className="flex items-start gap-3 mb-3">
+              <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="font-bold text-blue-900 mb-2">Notificações Importantes</h3>
+                <div className="space-y-2">
+                  {notificacoes.map((notif) => (
+                    <div key={notif.id} className="text-sm text-blue-800">
+                      <p className="font-semibold">{notif.titulo}</p>
+                      <p className="text-blue-700 text-xs mt-0.5">{notif.mensagem}</p>
+                    </div>
+                  ))}
+                </div>
+                <Link
+                  href="/dashboard/notificacoes"
+                  className="text-blue-600 font-semibold text-sm hover:underline inline-flex items-center gap-1 mt-3"
+                >
+                  Ver todas
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
           {[
